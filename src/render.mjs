@@ -4,8 +4,7 @@ import {
   dominoOuterPartition,
   keyForRender,
   tableauCells,
-  tableauToRows,
-} from "./render_helpers.mjs?v=20260517-random-n12";
+} from "./render_helpers.mjs?v=20260517-omega-rows";
 
 const palette = [
   "#d8ecff",
@@ -91,17 +90,24 @@ function cellsOfTableau(tableau) {
 function renderTableau(tableau, options = {}) {
   const highlights = new Set((options.highlightCells ?? []).map(keyForRender));
   const wrapper = el("div", "tableau");
-  const rows = tableauToRows(tableau);
-  rows.forEach((row, rowIndex) => {
-    const rowNode = el("div", "tableau-row");
-    row.forEach((value, colIndex) => {
-      const classes = [value === null ? "tableau-cell blank" : "tableau-cell"];
-      if (highlights.has(keyForRender([rowIndex + 1, colIndex + 1]))) classes.push("switched-cell");
-      const cell = el("div", classes.join(" "), value === null ? "" : String(value));
-      rowNode.appendChild(cell);
-    });
-    wrapper.appendChild(rowNode);
-  });
+  const cells = tableauCells(tableau);
+  const maxRows = Math.max(...cells.map(([i]) => i), 0);
+  const maxCols = Math.max(...cells.map(([, j]) => j), 0);
+  wrapper.style.gridTemplateColumns = `repeat(${maxCols}, 38px)`;
+  wrapper.style.gridTemplateRows = `repeat(${maxRows}, 38px)`;
+
+  for (let i = 1; i <= maxRows; i += 1) {
+    for (let j = 1; j <= maxCols; j += 1) {
+      const cellKey = keyForRender([i, j]);
+      const value = tableau.get(cellKey);
+      const classes = [value === undefined ? "tableau-cell blank" : "tableau-cell"];
+      if (highlights.has(cellKey)) classes.push("switched-cell");
+      const cell = el("div", classes.join(" "), value === undefined ? "" : String(value));
+      cell.style.gridRow = String(i);
+      cell.style.gridColumn = String(j);
+      wrapper.appendChild(cell);
+    }
+  }
   return wrapper;
 }
 
