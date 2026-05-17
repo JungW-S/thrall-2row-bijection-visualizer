@@ -5,6 +5,7 @@ import {
   dominoData,
   dominoOuterPartition,
   evaluation,
+  maxExactRandomEqualN,
   maxRandomEqualN,
   parseStraightTableau,
   randomEqualSYT,
@@ -86,6 +87,8 @@ assertEqual(dominoOuterPartition(continued.result), [4, 4, 2, 2], "continued out
 const randomT = randomEqualSYT(3, () => 0);
 assertEqual(xiReadiness(randomT).ok, true, "random equal tableau should be xi-ready");
 assertEqual(xiReadiness(parseStraightTableau(tableauToInputText(randomT))).ok, true, "random text should parse back to xi-ready");
+const constructedRandomT = randomEqualSYT(maxExactRandomEqualN + 1, () => 0.37);
+assertEqual(xiReadiness(constructedRandomT).ok, true, "constructed random tableau should be xi-ready");
 assertThrows(
   () => randomEqualSYT(maxRandomEqualN + 1),
   /currently enabled/,

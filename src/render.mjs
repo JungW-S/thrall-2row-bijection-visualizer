@@ -5,7 +5,7 @@ import {
   keyForRender,
   tableauCells,
   tableauToRows,
-} from "./render_helpers.mjs?v=20260517-random";
+} from "./render_helpers.mjs?v=20260517-random-n12";
 
 const palette = [
   "#d8ecff",

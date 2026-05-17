@@ -10,8 +10,8 @@ import {
   spin,
   tableauToInputText,
   xiReadiness,
-} from "./core.mjs?v=20260517-random";
-import { renderStep, renderStepList } from "./render.mjs?v=20260517-random";
+} from "./core.mjs?v=20260517-random-n12";
+import { renderStep, renderStepList } from "./render.mjs?v=20260517-random-n12";
 
 const input = document.querySelector("#tableau-input");
 const runButton = document.querySelector("#run-button");

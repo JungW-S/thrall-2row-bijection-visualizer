@@ -275,7 +275,241 @@ function* standardTableauxOfSize(size) {
   }
 }
 
-export const maxRandomEqualN = 5;
+const partitionListCache = new Map();
+
+function partitionList(size) {
+  if (!partitionListCache.has(size)) {
+    partitionListCache.set(size, Array.from(partitionsOfSize(size)));
+  }
+  return partitionListCache.get(size);
+}
+
+function randomIndex(length, random) {
+  return Math.min(length - 1, Math.floor(random() * length));
+}
+
+function randomChoice(items, random) {
+  if (items.length === 0) throw new Error("cannot choose from an empty list");
+  return items[randomIndex(items.length, random)];
+}
+
+function weightedIndex(weights, random) {
+  const total = weights.reduce((sum, weight) => sum + weight, 0);
+  if (!(total > 0)) return randomIndex(weights.length, random);
+  let target = random() * total;
+  for (let idx = 0; idx < weights.length; idx += 1) {
+    target -= weights[idx];
+    if (target <= 0) return idx;
+  }
+  return weights.length - 1;
+}
+
+const logFactorialCache = [0];
+
+function logFactorial(n) {
+  for (let i = logFactorialCache.length; i <= n; i += 1) {
+    logFactorialCache[i] = logFactorialCache[i - 1] + Math.log(i);
+  }
+  return logFactorialCache[n];
+}
+
+const logSYTCountCache = new Map();
+
+function logStandardTableauxCount(shape) {
+  const lam = normalizePartition(shape, "shape");
+  const cacheKey = lam.join(",");
+  if (logSYTCountCache.has(cacheKey)) return logSYTCountCache.get(cacheKey);
+  const size = partitionSize(lam);
+  let value = logFactorial(size);
+  lam.forEach((rowLength, rowIndex) => {
+    for (let j = 1; j <= rowLength; j += 1) {
+      let below = 0;
+      for (let r = rowIndex + 1; r < lam.length; r += 1) {
+        if (lam[r] >= j) below += 1;
+      }
+      value -= Math.log((rowLength - j) + below + 1);
+    }
+  });
+  logSYTCountCache.set(cacheKey, value);
+  return value;
+}
+
+function randomPartitionOfSize(size, random) {
+  return randomChoice(partitionList(size), random).slice();
+}
+
+function randomStandardTableauOfShape(shape, random) {
+  let current = normalizePartition(shape, "shape");
+  const out = new Map();
+  for (let value = partitionSize(current); value >= 1; value -= 1) {
+    const corners = removableCorners(current);
+    const logs = corners.map(({ smaller }) => logStandardTableauxCount(smaller));
+    const maxLog = Math.max(...logs);
+    const idx = weightedIndex(logs.map((x) => Math.exp(x - maxLog)), random);
+    out.set(key(corners[idx].cell), value);
+    current = corners[idx].smaller;
+  }
+  return out;
+}
+
+function containsPartition(outer, inner) {
+  for (let idx = 0; idx < inner.length; idx += 1) {
+    if ((outer[idx] ?? 0) < inner[idx]) return false;
+  }
+  return true;
+}
+
+function randomOuterPartitionContaining(inner, extraSize, random) {
+  let outer = inner.slice();
+  for (let step = 0; step < extraSize; step += 1) {
+    const choices = [];
+    for (let row = 0; row <= outer.length; row += 1) {
+      const next = (outer[row] ?? 0) + 1;
+      const above = row === 0 ? Number.POSITIVE_INFINITY : outer[row - 1];
+      const below = outer[row + 1] ?? 0;
+      if (next > above || next < below) continue;
+      const candidate = outer.slice();
+      while (candidate.length <= row) candidate.push(0);
+      candidate[row] = next;
+      while (candidate.length > 0 && candidate[candidate.length - 1] === 0) candidate.pop();
+      if (containsPartition(candidate, inner)) choices.push(candidate);
+    }
+    outer = randomChoice(choices, random);
+  }
+  return outer;
+}
+
+function skewCells(outer, inner) {
+  const mu = normalizePartition(outer, "outer shape");
+  const lam = normalizePartition(inner, "inner shape");
+  if (!containsPartition(mu, lam)) throw new Error("outer shape does not contain inner shape");
+  const cells = [];
+  mu.forEach((rowLength, rowIndex) => {
+    const innerLength = lam[rowIndex] ?? 0;
+    for (let j = innerLength + 1; j <= rowLength; j += 1) {
+      cells.push([rowIndex + 1, j]);
+    }
+  });
+  return cells;
+}
+
+function canonicalLRTableau(lambdaPart) {
+  const lam = normalizePartition(lambdaPart, "lambda");
+  const out = new Map();
+  lam.forEach((rowLength, rowIndex) => {
+    for (let j = 1; j <= rowLength; j += 1) {
+      out.set(key([rowIndex + 1, rowLength + j]), rowIndex + 1);
+    }
+  });
+  return out;
+}
+
+function shuffled(items, random) {
+  const out = items.slice();
+  for (let i = out.length - 1; i > 0; i -= 1) {
+    const j = randomIndex(i + 1, random);
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+function randomLRFilling(inner, outer, content, random, nodeLimit = 20000) {
+  const cells = skewCells(outer, inner);
+  if (cells.length !== partitionSize(content)) return null;
+  const cellSet = new Set(cells.map(key));
+  const order = cells.slice().sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+  const values = new Map();
+  const remaining = [0, ...content];
+  const used = Array.from({ length: content.length + 1 }, () => 0);
+  let nodes = 0;
+
+  function isBallotPrefix() {
+    for (let i = 1; i + 1 < used.length; i += 1) {
+      if (used[i] < used[i + 1]) return false;
+    }
+    return true;
+  }
+
+  function localSemistandardAllows(cell, value) {
+    const [i, j] = cell;
+    const right = key([i, j + 1]);
+    if (cellSet.has(right) && values.has(right) && value > values.get(right)) return false;
+    const above = key([i - 1, j]);
+    if (cellSet.has(above) && values.has(above) && values.get(above) >= value) return false;
+    return true;
+  }
+
+  function search(pos) {
+    nodes += 1;
+    if (nodes > nodeLimit) return false;
+    if (pos === order.length) return remaining.every((count) => count === 0);
+
+    const cell = order[pos];
+    const candidates = [];
+    for (let value = 1; value < remaining.length; value += 1) {
+      if (remaining[value] === 0) continue;
+      if (!localSemistandardAllows(cell, value)) continue;
+      remaining[value] -= 1;
+      used[value] += 1;
+      if (isBallotPrefix()) candidates.push(value);
+      used[value] -= 1;
+      remaining[value] += 1;
+    }
+
+    for (const value of shuffled(candidates, random)) {
+      values.set(key(cell), value);
+      remaining[value] -= 1;
+      used[value] += 1;
+      if (search(pos + 1)) return true;
+      used[value] -= 1;
+      remaining[value] += 1;
+      values.delete(key(cell));
+    }
+    return false;
+  }
+
+  return search(0) ? values : null;
+}
+
+function randomLRTableau(lambdaPart, random) {
+  const lam = normalizePartition(lambdaPart, "lambda");
+  const size = partitionSize(lam);
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const outer = randomOuterPartitionContaining(lam, size, random);
+    const filling = randomLRFilling(lam, outer, lam, random);
+    if (filling !== null) return filling;
+  }
+  return canonicalLRTableau(lam);
+}
+
+function inversePsiU(U, L) {
+  const lam = straightShape(U);
+  const reverseSecond = tableauSwitching(qTableau(lam), L, false);
+  const reverseFirst = tableauSwitching(U, reverseSecond.second, false);
+  return reverseFirst.second;
+}
+
+function assembleEqualSYT(U, S, n) {
+  const out = cloneTableau(U);
+  tableauEntries(S).forEach(({ cell, value }) => {
+    out.set(key(cell), value + n);
+  });
+  return out;
+}
+
+function constructedRandomEqualSYT(n, random) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const lambdaPart = randomPartitionOfSize(n, random);
+    const U = randomStandardTableauOfShape(lambdaPart, random);
+    const L = randomLRTableau(lambdaPart, random);
+    const T = assembleEqualSYT(U, inversePsiU(U, L), n);
+    if (xiReadiness(T).ok) return T;
+  }
+  throw new Error(`Could not generate an element of SYT^=(2n) for n=${n}.`);
+}
+
+export const maxExactRandomEqualN = 5;
+export const maxRandomEqualN = 12;
 const randomEqualSYTCache = new Map();
 
 function equalSYTList(n) {
@@ -294,13 +528,14 @@ export function randomEqualSYT(n, random = Math.random) {
     throw new Error("Choose a positive integer n.");
   }
   if (value > maxRandomEqualN) {
-    throw new Error(`Exact random generation is currently enabled for n <= ${maxRandomEqualN}.`);
+    throw new Error(`Random generation is currently enabled for n <= ${maxRandomEqualN}.`);
   }
+  if (value > maxExactRandomEqualN) return constructedRandomEqualSYT(value, random);
   const candidates = equalSYTList(value);
   if (candidates.length === 0) {
     throw new Error(`No tableaux found in SYT^=(2n) for n=${value}.`);
   }
-  const idx = Math.min(candidates.length - 1, Math.floor(random() * candidates.length));
+  const idx = randomIndex(candidates.length, random);
   return cloneTableau(candidates[idx]);
 }
 

@@ -47,9 +47,12 @@ the map `xi(T)` from the paper.
 
 ## Random Input
 
-The page can generate a random element of `SYT^=(2n)` for `1 <= n <= 5`.
-The generator enumerates the finite set exactly, caches it for the chosen
-`n`, and then samples uniformly from that list.
+The page can generate a random element of `SYT^=(2n)` for `1 <= n <= 12`.
+For `n <= 5`, the generator enumerates the finite set exactly, caches it for
+the chosen `n`, and samples uniformly from that list. For larger `n`, it uses
+the inverse of the tableau-switching construction to build a valid element
+directly; this is fast and varied, but it is not intended to be a uniform
+sample from the whole set.
 
 ## Test
 
