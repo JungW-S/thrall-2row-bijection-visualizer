@@ -4,7 +4,7 @@ import {
   dominoOuterPartition,
   keyForRender,
   tableauCells,
-} from "./render_helpers.mjs?v=20260517-omega-rows";
+} from "./render_helpers.mjs?v=20260517-random-n100";
 
 const palette = [
   "#d8ecff",

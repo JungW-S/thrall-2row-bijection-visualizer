@@ -275,15 +275,6 @@ function* standardTableauxOfSize(size) {
   }
 }
 
-const partitionListCache = new Map();
-
-function partitionList(size) {
-  if (!partitionListCache.has(size)) {
-    partitionListCache.set(size, Array.from(partitionsOfSize(size)));
-  }
-  return partitionListCache.get(size);
-}
-
 function randomIndex(length, random) {
   return Math.min(length - 1, Math.floor(random() * length));
 }
@@ -335,7 +326,7 @@ function logStandardTableauxCount(shape) {
 }
 
 function randomPartitionOfSize(size, random) {
-  return randomChoice(partitionList(size), random).slice();
+  return randomOuterPartitionContaining([], size, random);
 }
 
 function randomStandardTableauOfShape(shape, random) {
@@ -474,9 +465,11 @@ function randomLRFilling(inner, outer, content, random, nodeLimit = 20000) {
 function randomLRTableau(lambdaPart, random) {
   const lam = normalizePartition(lambdaPart, "lambda");
   const size = partitionSize(lam);
-  for (let attempt = 0; attempt < 50; attempt += 1) {
+  const attempts = size <= 30 ? 50 : size <= 60 ? 16 : 4;
+  const nodeLimit = size <= 30 ? 20000 : size <= 60 ? 8000 : 2000;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
     const outer = randomOuterPartitionContaining(lam, size, random);
-    const filling = randomLRFilling(lam, outer, lam, random);
+    const filling = randomLRFilling(lam, outer, lam, random, nodeLimit);
     if (filling !== null) return filling;
   }
   return canonicalLRTableau(lam);
@@ -509,7 +502,7 @@ function constructedRandomEqualSYT(n, random) {
 }
 
 export const maxExactRandomEqualN = 5;
-export const maxRandomEqualN = 12;
+export const maxRandomEqualN = 100;
 const randomEqualSYTCache = new Map();
 
 function equalSYTList(n) {

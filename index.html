@@ -29,10 +29,10 @@
         <div class="random-controls">
           <label for="random-n">Random element of <span class="math">SYT<sup>=</sup>(2n)</span></label>
           <div class="random-row">
-            <input id="random-n" type="number" min="1" max="12" value="6">
+            <input id="random-n" type="number" min="1" max="100" value="10">
             <button id="random-button" type="button" class="secondary">Random T</button>
           </div>
-          <p class="random-note">n ≤ 5: exact uniform. n &gt; 5: constructive random.</p>
+          <p class="random-note">n ≤ 5: exact uniform. n &gt; 5: constructive random. Large n may take a few seconds.</p>
         </div>
         <p class="hint">
           One row per line. Example: <code>1 2 4 7 9</code>.<br>
@@ -57,6 +57,6 @@
       </section>
     </main>
 
-    <script type="module" src="./src/app.mjs?v=20260517-omega-rows"></script>
+    <script type="module" src="./src/app.mjs?v=20260517-random-n100"></script>
   </body>
 </html>
