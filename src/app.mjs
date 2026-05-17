@@ -10,8 +10,8 @@ import {
   spin,
   tableauToInputText,
   xiReadiness,
-} from "./core.mjs";
-import { renderStep, renderStepList } from "./render.mjs";
+} from "./core.mjs?v=20260517-random";
+import { renderStep, renderStepList } from "./render.mjs?v=20260517-random";
 
 const input = document.querySelector("#tableau-input");
 const runButton = document.querySelector("#run-button");
@@ -118,8 +118,13 @@ async function loadRandomTableau() {
     randomButton.disabled = true;
     randomButton.textContent = "Generating...";
     await new Promise((resolve) => setTimeout(resolve, 0));
-    const tableau = randomEqualSYT(randomNInput.value);
-    input.value = tableauToInputText(tableau);
+    const previous = input.value.trim();
+    let nextText = "";
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      nextText = tableauToInputText(randomEqualSYT(randomNInput.value));
+      if (nextText.trim() !== previous) break;
+    }
+    input.value = nextText;
     run();
   } catch (err) {
     setError(err.message);
