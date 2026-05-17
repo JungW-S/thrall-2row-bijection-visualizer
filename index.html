@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>The Map ξ</title>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <main class="layout">
+      <header class="header">
+        <div>
+          <p class="eyebrow">Thrall's problem for two rows</p>
+          <h1>The map ξ</h1>
+        </div>
+        <p class="header-note">
+          The construction
+          <span class="math">ξ = Φ<sub>0</sub> ∘ Ω ∘ Ψ<sub>U</sub></span>.
+        </p>
+      </header>
+
+      <section class="input-panel">
+        <label for="tableau-input">Input standard Young tableau T, one row per line</label>
+        <textarea id="tableau-input" spellcheck="false"></textarea>
+        <div class="actions">
+          <button id="run-button" type="button">Run construction</button>
+          <button id="example-button" type="button" class="secondary">Load example</button>
+        </div>
+        <p class="hint">
+          Enter one row per line. Example: <code>1 2 4 7 9</code>.
+          If <span class="math">T</span> is not in
+          <span class="math">SYT<sup>=</sup>(2n)</span>, the page continues
+          for illustration; the output is not <span class="math">ξ(T)</span>.
+        </p>
+        <div id="error-box" class="error" hidden></div>
+      </section>
+
+      <section class="viewer">
+        <aside class="sidebar">
+          <div id="meta-box" class="meta"></div>
+          <div class="step-nav">
+            <button id="prev-step" type="button">Previous</button>
+            <span id="step-counter">0 / 0</span>
+            <button id="next-step" type="button">Next</button>
+          </div>
+          <div id="step-list" class="step-list"></div>
+        </aside>
+
+        <article id="step-container" class="step-container"></article>
+      </section>
+    </main>
+
+    <script type="module" src="./src/app.mjs"></script>
+  </body>
+</html>
