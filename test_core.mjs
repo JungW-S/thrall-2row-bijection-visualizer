@@ -5,8 +5,11 @@ import {
   dominoData,
   dominoOuterPartition,
   evaluation,
+  maxRandomEqualN,
   parseStraightTableau,
+  randomEqualSYT,
   spin,
+  tableauToInputText,
   xiReadiness,
 } from "./src/core.mjs";
 
@@ -79,6 +82,15 @@ const continued = computeContinuedTrace(nonEqual);
 assertEqual(continued.mode, "continued", "non-equal continued mode");
 assertEqual(continued.steps.length > 4, true, "non-equal trace should continue");
 assertEqual(dominoOuterPartition(continued.result), [4, 4, 2, 2], "continued output shape");
+
+const randomT = randomEqualSYT(3, () => 0);
+assertEqual(xiReadiness(randomT).ok, true, "random equal tableau should be xi-ready");
+assertEqual(xiReadiness(parseStraightTableau(tableauToInputText(randomT))).ok, true, "random text should parse back to xi-ready");
+assertThrows(
+  () => randomEqualSYT(maxRandomEqualN + 1),
+  /currently enabled/,
+  "random generator should reject large n",
+);
 
 assertThrows(
   () => parseStraightTableau("1 2a\n3 4"),

@@ -4,8 +4,11 @@ import {
   defaultExample,
   dominoOuterPartition,
   evaluation,
+  maxRandomEqualN,
   parseStraightTableau,
+  randomEqualSYT,
   spin,
+  tableauToInputText,
   xiReadiness,
 } from "./core.mjs";
 import { renderStep, renderStepList } from "./render.mjs";
@@ -13,6 +16,8 @@ import { renderStep, renderStepList } from "./render.mjs";
 const input = document.querySelector("#tableau-input");
 const runButton = document.querySelector("#run-button");
 const exampleButton = document.querySelector("#example-button");
+const randomNInput = document.querySelector("#random-n");
+const randomButton = document.querySelector("#random-button");
 const errorBox = document.querySelector("#error-box");
 const metaBox = document.querySelector("#meta-box");
 const stepContainer = document.querySelector("#step-container");
@@ -106,11 +111,31 @@ function run() {
   }
 }
 
+async function loadRandomTableau() {
+  const originalText = randomButton.textContent;
+  try {
+    setError("");
+    randomButton.disabled = true;
+    randomButton.textContent = "Generating...";
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const tableau = randomEqualSYT(randomNInput.value);
+    input.value = tableauToInputText(tableau);
+    run();
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    randomButton.disabled = false;
+    randomButton.textContent = originalText;
+  }
+}
+
 runButton.addEventListener("click", run);
 exampleButton.addEventListener("click", () => {
   input.value = defaultExample;
   run();
 });
+randomNInput.max = String(maxRandomEqualN);
+randomButton.addEventListener("click", loadRandomTableau);
 prevButton.addEventListener("click", () => showStep(currentIndex - 1));
 nextButton.addEventListener("click", () => showStep(currentIndex + 1));
 

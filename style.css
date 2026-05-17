@@ -98,6 +98,35 @@ textarea {
   margin-top: 12px;
 }
 
+.random-controls {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.random-controls label {
+  margin-bottom: 0;
+}
+
+.random-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.random-row input {
+  width: 76px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: var(--ink);
+  font: 1rem/1.2 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
 button {
   border: 1px solid var(--accent);
   border-radius: 6px;

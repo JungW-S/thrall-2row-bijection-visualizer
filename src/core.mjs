@@ -215,6 +215,95 @@ export function tableauToRows(tableau) {
   return rows;
 }
 
+export function tableauToInputText(tableau) {
+  return tableauToRows(tableau)
+    .map((row) => row.filter((entry) => entry !== null).join(" "))
+    .join("\n");
+}
+
+function partitionSize(partition) {
+  return partition.reduce((sum, part) => sum + part, 0);
+}
+
+function* partitionsOfSize(n, maxPart = n) {
+  if (n === 0) {
+    yield [];
+    return;
+  }
+  for (let first = Math.min(n, maxPart); first >= 1; first -= 1) {
+    for (const rest of partitionsOfSize(n - first, first)) {
+      yield [first, ...rest];
+    }
+  }
+}
+
+function removableCorners(partition) {
+  const corners = [];
+  partition.forEach((rowLength, rowIndex) => {
+    const nextLength = partition[rowIndex + 1] ?? 0;
+    if (rowLength > nextLength) {
+      const smaller = partition.slice();
+      smaller[rowIndex] -= 1;
+      while (smaller.length > 0 && smaller[smaller.length - 1] === 0) smaller.pop();
+      corners.push({
+        cell: [rowIndex + 1, rowLength],
+        smaller,
+      });
+    }
+  });
+  return corners;
+}
+
+function* standardTableauxOfShape(shape) {
+  const size = partitionSize(shape);
+  if (size === 0) {
+    yield new Map();
+    return;
+  }
+  for (const { cell, smaller } of removableCorners(shape)) {
+    for (const tableau of standardTableauxOfShape(smaller)) {
+      const next = cloneTableau(tableau);
+      next.set(key(cell), size);
+      yield next;
+    }
+  }
+}
+
+function* standardTableauxOfSize(size) {
+  for (const shape of partitionsOfSize(size)) {
+    yield* standardTableauxOfShape(shape);
+  }
+}
+
+export const maxRandomEqualN = 5;
+const randomEqualSYTCache = new Map();
+
+function equalSYTList(n) {
+  if (randomEqualSYTCache.has(n)) return randomEqualSYTCache.get(n);
+  const candidates = [];
+  for (const tableau of standardTableauxOfSize(2 * n)) {
+    if (xiReadiness(tableau).ok) candidates.push(tableau);
+  }
+  randomEqualSYTCache.set(n, candidates);
+  return candidates;
+}
+
+export function randomEqualSYT(n, random = Math.random) {
+  const value = Number.parseInt(n, 10);
+  if (!Number.isInteger(value) || value < 1) {
+    throw new Error("Choose a positive integer n.");
+  }
+  if (value > maxRandomEqualN) {
+    throw new Error(`Exact random generation is currently enabled for n <= ${maxRandomEqualN}.`);
+  }
+  const candidates = equalSYTList(value);
+  if (candidates.length === 0) {
+    throw new Error(`No tableaux found in SYT^=(2n) for n=${value}.`);
+  }
+  const idx = Math.min(candidates.length - 1, Math.floor(random() * candidates.length));
+  return cloneTableau(candidates[idx]);
+}
+
 export function qTableau(lambdaPart) {
   const lam = normalizePartition(lambdaPart, "lambda");
   const out = new Map();

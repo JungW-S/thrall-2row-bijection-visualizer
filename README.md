@@ -45,6 +45,12 @@ displays a warning and continues after replacing `U` by `rect(S)`, where
 `S=st(T_[n+1,2n])`. This display is a continuation of the construction, not
 the map `xi(T)` from the paper.
 
+## Random Input
+
+The page can generate a random element of `SYT^=(2n)` for `1 <= n <= 5`.
+The generator enumerates the finite set exactly, caches it for the chosen
+`n`, and then samples uniformly from that list.
+
 ## Test
 
 On macOS, the JavaScriptCore runtime can run the reference test:
