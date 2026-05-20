@@ -4,7 +4,7 @@ import {
   dominoOuterPartition,
   keyForRender,
   tableauCells,
-} from "./render_helpers.mjs?v=20260517-random-n100";
+} from "./render_helpers.mjs?v=20260520-story-polish-44";
 
 const palette = [
   "#d8ecff",
@@ -36,30 +36,55 @@ function escapeHtml(text) {
 function formatMath(text) {
   let html = escapeHtml(text);
   html = html
+    .replaceAll("D=(Phi_0 o Omega o Psi_U)(S)", "<span class=\"math\">D=(Φ<sub>0</sub>∘Ω∘Ψ<sub>U</sub>)(S)</span>")
+    .replaceAll("vartheta(T)", "<span class=\"math\">ϑ(T)</span>")
+    .replaceAll("theta(D)", "<span class=\"math\">θ(D)</span>")
+    .replaceAll("xi(T)=(U,D)", "<span class=\"math\">ξ(T)=(U,D)</span>")
+    .replaceAll("X(Q_λ,S)", "<span class=\"math\">X(Q<sub>λ</sub>,S)</span>")
+    .replaceAll("X(1_λ,B)", "<span class=\"math\">X(1<sub>λ</sub>,B)</span>")
+    .replaceAll("X(Q_lambda,S)", "<span class=\"math\">X(Q<sub>λ</sub>,S)</span>")
+    .replaceAll("X(1_lambda,B)", "<span class=\"math\">X(1<sub>λ</sub>,B)</span>")
+    .replaceAll("Q_lambda and Psi_U(S)", "<span class=\"math\">Q<sub>λ</sub></span> and <span class=\"math\">Ψ<sub>U</sub>(S)</span>")
+    .replaceAll("Q_λ", "<span class=\"math\">Q<sub>λ</sub></span>")
+    .replaceAll("1_λ", "<span class=\"math\">1<sub>λ</sub></span>")
+    .replaceAll("Psi_U(S)", "<span class=\"math\">Ψ<sub>U</sub>(S)</span>")
+    .replaceAll("d(Omega(L))", "<span class=\"math\">d(Ω(L))</span>")
+    .replaceAll("Omega(L)", "<span class=\"math\">Ω(L)</span>")
     .replaceAll("Phi_0", "<span class=\"math\">Φ<sub>0</sub></span>")
     .replaceAll("Psi_U", "<span class=\"math\">Ψ<sub>U</sub></span>")
-    .replaceAll("Omega(L)", "<span class=\"math\">Ω(L)</span>")
     .replaceAll("Omega", "<span class=\"math\">Ω</span>")
     .replaceAll("Q_lambda", "<span class=\"math\">Q<sub>λ</sub></span>")
     .replaceAll("1_lambda", "<span class=\"math\">1<sub>λ</sub></span>")
     .replaceAll("lambda^square", "<span class=\"math\">λ<sup>□</sup></span>")
     .replaceAll("lambda*lambda", "<span class=\"math\">λ*λ</span>")
+    .replaceAll("S in SYT^U(mu/lambda)", "<span class=\"math\">S∈SYT<sup>U</sup>(μ/λ)</span>")
     .replaceAll("SYT^U(mu/lambda)", "<span class=\"math\">SYT<sup>U</sup>(μ/λ)</span>")
     .replaceAll("SYT^=(2n)", "<span class=\"math\">SYT<sup>=</sup>(2n)</span>")
+    .replaceAll("T^[n+1,2n]", "<span class=\"math\">T<sup>[n+1,2n]</sup></span>")
+    .replaceAll("SYT_{(n,n)}(mu)", "<span class=\"math\">SYT<sub>(n,n)</sub>(μ)</span>")
     .replaceAll("SYT_{(n,n)}^spin(mu)", "<span class=\"math\">SYT<sup>spin</sup><sub>(n,n)</sub>(μ)</span>")
     .replaceAll("YDT(lambda^square,mu)", "<span class=\"math\">YDT(λ<sup>□</sup>,μ)</span>")
     .replaceAll("Y(lambda,mu)", "<span class=\"math\">Y(λ,μ)</span>")
     .replaceAll("a_{l,k}", "<span class=\"math\">a<sub>l,k</sub></span>")
+    .replaceAll("spin(T)", "<span class=\"math\">spin(T)</span>")
+    .replaceAll("spin(D) mod 2", "<span class=\"math\">spin(D) mod 2</span>")
     .replaceAll("spin(D)", "<span class=\"math\">spin(D)</span>")
+    .replaceAll("maj(T_[n])", "<span class=\"math\">maj(T<sub>[n]</sub>)</span>")
+    .replaceAll("n mod 2", "<span class=\"math\">n mod 2</span>")
+    .replaceAll("sh(rect(S))", "<span class=\"math\">sh(rect(S))</span>")
     .replaceAll("st(T_[n+1,2n])", "<span class=\"math\">st(T<sub>[n+1,2n]</sub>)</span>")
     .replaceAll("T_[n]", "<span class=\"math\">T<sub>[n]</sub></span>")
     .replaceAll("rect(S)", "<span class=\"math\">rect(S)</span>")
+    .replaceAll("rect(B)", "<span class=\"math\">rect(B)</span>")
+    .replaceAll("maj(U)", "<span class=\"math\">maj(U)</span>")
     .replaceAll("xi(T)", "<span class=\"math\">ξ(T)</span>")
     .replaceAll("xi", "<span class=\"math\">ξ</span>");
   html = html
     .replace(/delta_([0-9]+)/g, "<span class=\"math\">δ<sub>$1</sub></span>")
     .replace(/\blambda\b/g, "<span class=\"math\">λ</span>")
     .replace(/\bmu\b/g, "<span class=\"math\">μ</span>")
+    .replace(/Q_<span class="math">λ<\/span>/g, "<span class=\"math\">Q<sub>λ</sub></span>")
+    .replace(/1_<span class="math">λ<\/span>/g, "<span class=\"math\">1<sub>λ</sub></span>")
     .replace(/\btheta\b/g, "<span class=\"math\">θ</span>");
   return html;
 }
@@ -68,6 +93,20 @@ function richEl(tag, className = "", text = "") {
   const node = el(tag, className);
   node.innerHTML = formatMath(text);
   return node;
+}
+
+function plainMath(text) {
+  return String(text)
+    .replaceAll("Q_lambda", "Q_λ")
+    .replaceAll("1_lambda", "1_λ")
+    .replaceAll("Psi_U", "Ψ_U")
+    .replaceAll("Omega", "Ω")
+    .replaceAll("Phi_0", "Φ_0")
+    .replaceAll("theta", "θ")
+    .replaceAll("delta_", "δ_")
+    .replaceAll("lambda", "λ")
+    .replaceAll("mu", "μ")
+    .replaceAll("xi", "ξ");
 }
 
 function subscriptNumber(n) {
@@ -102,6 +141,10 @@ function renderTableau(tableau, options = {}) {
       const value = tableau.get(cellKey);
       const classes = [value === undefined ? "tableau-cell blank" : "tableau-cell"];
       if (highlights.has(cellKey)) classes.push("switched-cell");
+      if (value !== undefined && options.cellClass) {
+        const extraClass = options.cellClass({ cell: [i, j], value });
+        if (extraClass) classes.push(extraClass);
+      }
       const cell = el("div", classes.join(" "), value === undefined ? "" : String(value));
       cell.style.gridRow = String(i);
       cell.style.gridColumn = String(j);
@@ -111,7 +154,57 @@ function renderTableau(tableau, options = {}) {
   return wrapper;
 }
 
-function renderSwitchingCombined(state, switching, idx) {
+function renderSplitView(split) {
+  const stage = el("div", "split-stage");
+  const controls = el("div", "split-controls");
+  const note = richEl(
+    "p",
+    "split-note",
+    "Entries 1,...,n form U=T_[n]; entries n+1,...,2n form S=st(T_[n+1,2n]).",
+  );
+  controls.append(note);
+
+  const source = renderPanel("T", renderTableau(split.T, {
+    cellClass: ({ value }) => (value <= split.n ? "split-u-cell" : "split-s-cell"),
+  }));
+  source.classList.add("split-source-panel");
+
+  const targets = el("div", "split-targets");
+  const uPanel = renderPanel("U = T_[n]", renderTableau(split.U, {
+    cellClass: () => "split-u-cell",
+  }));
+  uPanel.classList.add("split-target-panel", "split-u-target");
+  targets.appendChild(uPanel);
+
+  const sPanel = renderPanel("S = st(T_[n+1,2n])", renderTableau(split.S, {
+    cellClass: () => "split-s-cell",
+  }));
+  sPanel.classList.add("split-target-panel", "split-s-target");
+  targets.appendChild(sPanel);
+
+  if (split.rectified) {
+    const rectPanel = renderPanel("rect(S)", renderTableau(split.rectified, {
+      cellClass: () => "split-s-cell",
+    }));
+    rectPanel.classList.add("split-target-panel", "split-rectified-target");
+    targets.appendChild(rectPanel);
+  }
+
+  const arrow = el("div", "split-arrow", "→");
+  stage.append(source, arrow, targets);
+
+  stage.classList.add("played");
+
+  const wrapper = el("div", "split-view");
+  wrapper.append(controls, stage);
+  return wrapper;
+}
+
+function renderSplitBoard(split) {
+  return renderConstructionBoard(renderSplitView(split));
+}
+
+function renderSwitchingCombined(state, switching, idx, options = {}) {
   const innerName = idx === switching.states.length - 1 ? switching.finalInnerLabel : switching.innerLabel;
   const outerName = idx === switching.states.length - 1 ? switching.finalOuterLabel : switching.outerLabel;
   const highlightCells = new Set(state.move ? [state.move.innerCell, state.move.outerCell].map(keyForRender) : []);
@@ -143,15 +236,56 @@ function renderSwitchingCombined(state, switching, idx) {
       const node = el("div", classes.join(" "), String(value));
       node.style.gridRow = String(i);
       node.style.gridColumn = String(j);
-      node.title = `${inInner ? innerName : outerName}, cell (${i},${j})`;
+      node.title = `${plainMath(inInner ? innerName : outerName)}, cell (${i},${j})`;
       wrapper.appendChild(node);
     }
   }
 
-  if (state.move) {
+  if (state.move && options.showConnector !== false) {
     wrapper.appendChild(renderSwitchConnector(state.move, maxRows, maxCols));
   }
+  if (options.animateMove && state.move && options.previousState) {
+    appendSwitchMotion(wrapper, state.move);
+  }
   return wrapper;
+}
+
+function appendSwitchMotion(wrapper, move) {
+  const cellSize = 38;
+  const pieces = [
+    {
+      label: move.innerLabel,
+      className: "switch-inner-cell",
+      from: move.innerCell,
+      to: move.outerCell,
+    },
+    {
+      label: move.outerLabel,
+      className: "switch-outer-cell",
+      from: move.outerCell,
+      to: move.innerCell,
+    },
+  ];
+  wrapper.classList.add("animating-switch");
+  pieces.forEach((piece) => {
+    const node = el("div", `tableau-cell switch-flying-cell ${piece.className}`, String(piece.label));
+    const fromX = (piece.from[1] - 1) * cellSize;
+    const fromY = (piece.from[0] - 1) * cellSize;
+    const dx = (piece.to[1] - piece.from[1]) * cellSize;
+    const dy = (piece.to[0] - piece.from[0]) * cellSize;
+    node.style.left = `${fromX}px`;
+    node.style.top = `${fromY}px`;
+    node.style.setProperty("--switch-dx", `${dx}px`);
+    node.style.setProperty("--switch-dy", `${dy}px`);
+    wrapper.appendChild(node);
+    window.requestAnimationFrame(() => {
+      node.classList.add("moving");
+    });
+    window.setTimeout(() => {
+      node.remove();
+      wrapper.classList.remove("animating-switch");
+    }, 520);
+  });
 }
 
 function renderSwitchConnector(move, maxRows, maxCols) {
@@ -254,7 +388,7 @@ function renderDominoTableau(tableau, options = {}) {
     const sourceText = sourceComponent === "lower"
       ? " from M, vertical domino"
       : sourceComponent === "upper"
-        ? " from 1_lambda, horizontal domino"
+        ? " from 1_λ, horizontal domino"
         : "";
     node.title = `domino ${id}${sourceText}: (${domino.cells.map((cell) => cell.join(",")).join("),(")})`;
     node.appendChild(el("span", "domino-label", String(domino.label)));
@@ -306,7 +440,7 @@ function renderOmegaTableau(data) {
       const node = el("div", className, String(inLower ? lowerEntries.get(cellKey) : upperEntries.get(cellKey)));
       node.style.gridRow = String(i);
       node.style.gridColumn = String(j);
-      node.title = inLower ? "lower-left component M" : "upper-right component 1_lambda";
+      node.title = inLower ? "lower-left component M" : "upper-right component 1_λ";
       wrapper.appendChild(node);
     }
   }
@@ -360,11 +494,31 @@ function renderPanel(label, bodyNode) {
   return panel;
 }
 
+function renderStepExplanation(step) {
+  const explanation = el("div", "step-explanation");
+  explanation.appendChild(richEl("h2", "", step.title));
+  explanation.appendChild(richEl("p", "description", step.description));
+  return explanation;
+}
+
+function renderConstructionBoard(...children) {
+  const board = el("div", "construction-board");
+  children.forEach((child) => board.appendChild(child));
+  return board;
+}
+
+function renderInputBoard(step) {
+  const tableau = step.tableaux?.[0]?.tableau;
+  const boardRow = el("div", "construction-row input-board-row");
+  boardRow.appendChild(renderPanel("T", renderTableau(tableau)));
+  return renderConstructionBoard(boardRow);
+}
+
 function renderDMapLegend() {
   const legend = el("div", "d-map-legend");
   const rows = [
-    ["component lower", "M in the lower-left component", "sample-domino vertical", "vertical dominoes"],
-    ["component upper", "1_lambda in the upper-right component", "sample-domino horizontal", "horizontal dominoes"],
+    ["component lower", "lower-left component M", "sample-domino vertical", "vertical dominoes"],
+    ["component upper", "upper-right component 1_lambda", "sample-domino horizontal", "horizontal dominoes"],
   ];
   rows.forEach(([componentClass, source, sampleClass, target]) => {
     const row = el("div", "d-map-legend-row");
@@ -381,7 +535,7 @@ function renderOmegaBuildInfo(info) {
   box.appendChild(richEl(
     "p",
     "omega-build-text",
-    "Rule: a cell in row l of L with entry k contributes one entry l to row k of M.",
+    "If L contains a_{l,k} entries equal to k in row l, then M contains a_{l,k} entries equal to l in row k.",
   ));
 
   const table = el("table", "omega-count-table");
@@ -435,28 +589,43 @@ function renderDMapView(step) {
 
 function renderFinalInfo(info) {
   const box = el("div", "final-info");
-  const status = el("div", info.inY ? "final-status in-set" : "final-status out-set");
+  const majorOk = Boolean(info.xiDefined && info.inTwoRowRefined);
+  const spinOk = info.inY;
+  const subsetOk = Boolean(info.xiDefined && majorOk && spinOk);
+  const status = el("div", subsetOk ? "final-status in-set" : "final-status out-set");
+  const spinRelation = spinOk ? "≡" : "≠";
   status.appendChild(richEl(
     "div",
     "final-status-main",
-    info.inY ? "spin(D) ≡ n mod 2" : "spin(D) ≠ n mod 2",
+    !info.xiDefined
+      ? `xi(T) is not defined`
+      : subsetOk
+      ? `T ∈ SYT_{(n,n)}^spin(mu)`
+      : `T ∉ SYT_{(n,n)}^spin(mu)`,
   ));
-  status.appendChild(richEl(
-    "div",
-    "final-status-sub",
-    `spin(D) = ${info.spin} and n = ${info.n}.`,
-  ));
+  const rows = el("div", "final-parity-rows");
+  if (info.xiDefined) {
+    rows.appendChild(richEl("div", "final-parity-row", `maj(T_[n]) = ${info.blockMajor}`));
+    rows.appendChild(richEl(
+      "div",
+      "final-parity-row",
+      `maj(T_[n]) ${majorOk ? "≡" : "≠"} 1 mod n`,
+    ));
+  }
+  rows.appendChild(richEl("div", "final-parity-row", `spin(D) = ${info.spin}`));
+  rows.appendChild(richEl("div", "final-parity-row", `spin(D) ${spinRelation} n mod 2`));
+  status.appendChild(rows);
 
   box.appendChild(status);
-  box.appendChild(richEl(
-    "p",
-    "final-note",
-    info.xiDefined
-      ? (info.inY
-        ? "Thus T ∈ SYT_{(n,n)}^spin(mu)."
-        : "Thus T ∉ SYT_{(n,n)}^spin(mu).")
-      : "Since T is not in SYT^=(2n), this parity statement concerns only the displayed domino tableau, not xi(T).",
-  ));
+  let note = "Since T is not in SYT^=(2n), xi(T) is not defined. The displayed D is only the comparison output.";
+  if (info.xiDefined && info.inTwoRowRefined) {
+    note = info.inSpinSubset
+      ? `Here xi(T)=(U,D) and spin(T)=spin(D). Thus T ∈ SYT_{(n,n)}^spin(mu), with mu=(${info.mu.join(",")}).`
+      : `Here xi(T)=(U,D) and spin(T)=spin(D). Thus T ∉ SYT_{(n,n)}^spin(mu), with mu=(${info.mu.join(",")}).`;
+  } else if (info.xiDefined) {
+    note = `Here xi(T)=(U,D) and spin(T)=spin(D), but maj(T_[n])=${info.blockMajor} is not congruent to 1 modulo n. Thus T ∉ SYT_{(n,n)}(mu), with mu=(${info.mu.join(",")}).`;
+  }
+  box.appendChild(richEl("p", "final-note", note));
   return box;
 }
 
@@ -498,7 +667,7 @@ function renderChainSelector(chainDetails = [], selectedIndex, onSelect, tableau
   const allButton = el("button", selectedIndex === null ? "chain-button all active" : "chain-button all");
   allButton.type = "button";
   allButton.appendChild(el("span", "chain-main", "All chains"));
-  allButton.appendChild(el("span", "chain-sequence", "show all open and closed chains"));
+  allButton.appendChild(el("span", "chain-sequence", "open and closed chains"));
   allButton.addEventListener("click", () => onSelect(null));
   list.appendChild(allButton);
 
@@ -522,17 +691,52 @@ function renderChainSelector(chainDetails = [], selectedIndex, onSelect, tableau
   return box;
 }
 
-function renderSwitchFrame(switching, idx) {
+function renderSwitchingSetup(setup) {
+  const wrapper = el("div", "switch-setup");
+  const left = renderPanel(setup.leftLabel, renderTableau(setup.leftTableau, {
+    cellClass: () => "switch-inner-cell",
+  }));
+  const right = renderPanel(setup.rightLabel, renderTableau(setup.rightTableau, {
+    cellClass: () => "switch-outer-cell",
+  }));
+  const target = renderPanel(setup.targetLabel, renderTableau(setup.targetTableau, {
+    cellClass: () => "switch-target-cell",
+  }));
+  left.classList.add("switch-setup-panel");
+  right.classList.add("switch-setup-panel");
+  target.classList.add("switch-setup-panel", "switch-target-panel");
+  wrapper.append(
+    left,
+    el("div", "switch-setup-symbol", "+"),
+    right,
+    el("div", "switch-setup-symbol", "⇝"),
+    target,
+  );
+  return wrapper;
+}
+
+function renderSwitchingBoard(switching) {
+  const board = renderConstructionBoard();
+  if (switching.setup) {
+    const setupBlock = el("div", "construction-board-block");
+    setupBlock.appendChild(richEl("div", "panel-title", `X(${switching.innerLabel},${switching.outerLabel})`));
+    setupBlock.appendChild(renderSwitchingSetup(switching.setup));
+    board.appendChild(setupBlock);
+  }
+  const traceBlock = el("div", "construction-board-block");
+  traceBlock.appendChild(el("div", "panel-title", "tableau switching"));
+  traceBlock.appendChild(renderSwitchingTrace(switching));
+  board.appendChild(traceBlock);
+  return board;
+}
+
+function renderSwitchFrame(switching, idx, options = {}) {
   const state = switching.states[idx];
   const frame = el("div", "switch-frame");
-  const title = el("div", "frame-title", `switch ${idx}`);
+  const title = el("div", "frame-title", idx === 0 ? "initial pair" : `move ${idx}`);
   frame.appendChild(title);
   if (state.move) {
-    frame.appendChild(el(
-      "div",
-      "move-caption",
-      `swap (${state.move.innerCell[0]},${state.move.innerCell[1]}) with (${state.move.outerCell[0]},${state.move.outerCell[1]})`,
-    ));
+    frame.appendChild(el("div", "move-caption", "interchanged cells"));
   } else {
     frame.appendChild(el("div", "move-caption", "initial pair"));
   }
@@ -543,7 +747,10 @@ function renderSwitchFrame(switching, idx) {
   legend.appendChild(richEl("span", "legend-item inner", innerName));
   legend.appendChild(richEl("span", "legend-item outer", outerName));
   frame.appendChild(legend);
-  frame.appendChild(renderSwitchingCombined(state, switching, idx));
+  frame.appendChild(renderSwitchingCombined(state, switching, idx, {
+    ...options,
+    showConnector: false,
+  }));
   return frame;
 }
 
@@ -551,8 +758,8 @@ function renderSwitchingTrace(switching) {
   let current = 0;
   const wrapper = el("div", "switch-player");
   const controls = el("div", "switch-controls");
-  const prev = el("button", "secondary", "Previous switch");
-  const next = el("button", "secondary", "Next switch");
+  const prev = el("button", "secondary", "Previous");
+  const next = el("button", "secondary", "Next");
   const counter = el("span", "switch-counter");
   const slider = el("input", "switch-slider");
   const frameHost = el("div", "switch-frame-host");
@@ -564,8 +771,8 @@ function renderSwitchingTrace(switching) {
   slider.max = String(Math.max(0, switching.states.length - 1));
   slider.step = "1";
 
-  const render = () => {
-    frameHost.replaceChildren(renderSwitchFrame(switching, current));
+  const render = (options = {}) => {
+    frameHost.replaceChildren(renderSwitchFrame(switching, current, options));
     counter.textContent = `${current + 1} / ${switching.states.length}`;
     prev.disabled = current === 0;
     next.disabled = current === switching.states.length - 1;
@@ -577,8 +784,12 @@ function renderSwitchingTrace(switching) {
     render();
   });
   next.addEventListener("click", () => {
+    const previous = current;
     current = Math.min(switching.states.length - 1, current + 1);
-    render();
+    render({
+      animateMove: current > previous,
+      previousState: switching.states[previous],
+    });
   });
   slider.addEventListener("input", () => {
     current = Number.parseInt(slider.value, 10);
@@ -602,11 +813,11 @@ function renderSwitchingOverview(switching) {
   };
 
   wrapper.appendChild(renderPanel(
-    `before: ${switching.innerLabel} + ${switching.outerLabel}`,
+    `${switching.innerLabel} and ${switching.outerLabel}`,
     renderSwitchingCombined(first, switching, 0),
   ));
   wrapper.appendChild(renderPanel(
-    `after: ${switching.finalInnerLabel} + ${switching.finalOuterLabel}`,
+    `${switching.finalInnerLabel} and ${switching.finalOuterLabel}`,
     renderSwitchingCombined(finalState, switching, switching.states.length - 1),
   ));
   return wrapper;
@@ -641,13 +852,13 @@ function renderThetaStep(step) {
     const ids = selectedIds();
     const orderLabels = selectedOrderLabels();
     grid.replaceChildren(
-      renderPanel("before", renderDominoTableau(step.dominoBefore, {
+      renderPanel("D", renderDominoTableau(step.dominoBefore, {
         arrows: selectedArrows(),
         openIds: step.openIds,
         selectedDominoIds: ids,
         orderLabels,
       })),
-      renderPanel("after", renderDominoTableau(step.dominoAfter, {
+      renderPanel("theta(D)", renderDominoTableau(step.dominoAfter, {
         selectedDominoIds: ids,
         orderLabels,
       })),
@@ -657,7 +868,6 @@ function renderThetaStep(step) {
         selectedIndex = idx;
         render();
       }, step.dominoBefore)),
-      renderPanel("arrows", renderArrowList(selectedArrows(), step.dominoBefore)),
     );
   };
 
@@ -668,10 +878,13 @@ function renderThetaStep(step) {
 
 export function renderStep(step, container) {
   container.replaceChildren();
-  container.appendChild(richEl("h2", "", step.title));
-  container.appendChild(richEl("p", "description", step.description));
+  container.appendChild(renderStepExplanation(step));
 
-  if (step.tableaux && !step.switching) {
+  if (step.phase === "vartheta" && step.tableaux?.length === 1 && !step.split) {
+    container.appendChild(renderInputBoard(step));
+  } else if (step.split) {
+    container.appendChild(renderSplitBoard(step.split));
+  } else if (step.tableaux && !step.switching) {
     const grid = el("div", "panel-grid");
     step.tableaux.forEach(({ label, tableau }) => {
       grid.appendChild(renderPanel(label, renderTableau(tableau)));
@@ -679,31 +892,34 @@ export function renderStep(step, container) {
     if (step.omegaTableau) {
       grid.appendChild(renderPanel("Omega(L)", renderOmegaTableau(step.omegaTableau)));
     }
-    container.appendChild(grid);
+    const board = renderConstructionBoard(grid);
     if (step.omegaBuildInfo) {
-      container.appendChild(renderPanel("How M is built", renderOmegaBuildInfo(step.omegaBuildInfo)));
+      board.appendChild(renderPanel("M", renderOmegaBuildInfo(step.omegaBuildInfo)));
     }
+    container.appendChild(board);
   }
 
   if (step.switching) {
-    container.appendChild(el("div", "panel-title", "before and after"));
-    container.appendChild(renderSwitchingOverview(step.switching));
-    container.appendChild(el("div", "panel-title", "tableau switching trace"));
-    container.appendChild(renderSwitchingTrace(step.switching));
+    container.appendChild(renderSwitchingBoard(step.switching));
   }
 
+  const trailingBoardNodes = [];
   if (step.dMapView) {
-    container.appendChild(renderDMapView(step));
+    trailingBoardNodes.push(renderDMapView(step));
   } else if (step.domino) {
-    container.appendChild(renderPanel("domino tableau", renderDominoTableau(step.domino)));
+    trailingBoardNodes.push(renderPanel("D", renderDominoTableau(step.domino)));
   }
 
   if (step.finalInfo) {
-    container.appendChild(renderPanel("spin parity", renderFinalInfo(step.finalInfo)));
+    trailingBoardNodes.push(renderPanel(step.finalInfo.xiDefined ? "spin(D)" : "comparison output", renderFinalInfo(step.finalInfo)));
+  }
+
+  if (trailingBoardNodes.length > 0) {
+    container.appendChild(renderConstructionBoard(...trailingBoardNodes));
   }
 
   if (step.dominoBefore && step.dominoAfter) {
-    container.appendChild(renderThetaStep(step));
+    container.appendChild(renderConstructionBoard(renderThetaStep(step)));
   }
 }
 

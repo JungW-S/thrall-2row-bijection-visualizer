@@ -498,7 +498,7 @@ function constructedRandomEqualSYT(n, random) {
     const T = assembleEqualSYT(U, inversePsiU(U, L), n);
     if (xiReadiness(T).ok) return T;
   }
-  throw new Error(`Could not generate an element of SYT^=(2n) for n=${n}.`);
+  throw new Error(`No element of SYT^=(2n) was found for n=${n}.`);
 }
 
 export const maxExactRandomEqualN = 5;
@@ -521,7 +521,7 @@ export function randomEqualSYT(n, random = Math.random) {
     throw new Error("Choose a positive integer n.");
   }
   if (value > maxRandomEqualN) {
-    throw new Error(`Random generation is currently enabled for n <= ${maxRandomEqualN}.`);
+    throw new Error(`Random choice is available for n <= ${maxRandomEqualN}.`);
   }
   if (value > maxExactRandomEqualN) return constructedRandomEqualSYT(value, random);
   const candidates = equalSYTList(value);
@@ -611,6 +611,20 @@ export function readingWord(tableau) {
     });
   });
   return word;
+}
+
+export function majorIndex(tableau) {
+  const byValue = new Map();
+  tableauEntries(tableau).forEach(({ cell, value }) => byValue.set(value, cell));
+  if (byValue.size === 0) return 0;
+  const maxValue = Math.max(...byValue.keys());
+  let total = 0;
+  for (let value = 1; value < maxValue; value += 1) {
+    const current = byValue.get(value);
+    const next = byValue.get(value + 1);
+    if (current && next && next[0] > current[0]) total += value;
+  }
+  return total;
 }
 
 export function validateSYT(tableau) {
@@ -724,13 +738,13 @@ export function psiU(U, S, check = true) {
   const Q = qTableau(lam);
   const first = tableauSwitching(Q, S, true);
   if (check && !equalTableaux(first.first, U)) {
-    throw new Error("S is not in SYT^U(mu/lambda): rect(S) is not U.");
+    throw new Error("S is not in SYT^U(μ/λ): rect(S) is not U.");
   }
 
   const one = oneTableau(lam);
   const second = tableauSwitching(one, first.second, true);
   if (check && !equalTableaux(second.first, Q)) {
-    throw new Error("The second tableau switching did not recover Q_lambda.");
+    throw new Error("The second tableau switching did not recover Q_λ.");
   }
 
   return {
@@ -758,7 +772,7 @@ export function omega(lambdaPart, L) {
   const lowerLeft = rows.map((row, idx) => {
     const sorted = row.slice().sort((a, b) => a - b);
     if (sorted.length !== lam[idx]) {
-      throw new Error(`Omega row ${idx + 1} has length ${sorted.length}, expected ${lam[idx]}`);
+      throw new Error(`Ω row ${idx + 1} has length ${sorted.length}, expected ${lam[idx]}`);
     }
     return sorted;
   });
@@ -811,7 +825,7 @@ function dominoTableau(innerK, dominoes) {
   });
   const inner = new Set(deltaCells(kValue).map(key));
   for (const cellKey of occupied) {
-    if (inner.has(cellKey)) throw new Error(`domino cells overlap delta_${kValue}`);
+    if (inner.has(cellKey)) throw new Error(`domino cells overlap δ_${kValue}`);
   }
   partitionFromCells(cellsFromKeys(new Set([...occupied, ...inner])));
   return { innerK: kValue, dominoes: normalized };
@@ -1110,7 +1124,7 @@ export function thetaChainDetails(tableau, arrows) {
 
 export function theta(tableau) {
   if (tableau.innerK === 1) {
-    throw new Error("theta is not defined once the inner staircase is empty");
+    throw new Error("θ is not defined once the inner staircase is empty");
   }
   const arrows = thetaArrows(tableau);
   const openIds = openDominoIds(tableau, arrows);
@@ -1143,10 +1157,13 @@ export function phi0(lambdaPart, lowerLeft, upperRight) {
   return { result: tableau, steps };
 }
 
-function finalSpinInfo(n, lambdaPart, mu, result, xiDefined) {
+function finalSpinInfo(n, lambdaPart, mu, result, xiDefined, U = null) {
   const spinValue = spin(result);
   const spinParity = ((spinValue % 2) + 2) % 2;
   const nParity = n % 2;
+  const blockMajor = U ? majorIndex(U) : null;
+  const blockMajorOk = blockMajor === null ? false : (((blockMajor - 1) % n) + n) % n === 0;
+  const inTwoRowRefined = Boolean(xiDefined && blockMajorOk);
   return {
     n,
     lambda: lambdaPart,
@@ -1155,6 +1172,9 @@ function finalSpinInfo(n, lambdaPart, mu, result, xiDefined) {
     spinParity,
     nParity,
     inY: spinParity === nParity,
+    blockMajor,
+    inTwoRowRefined,
+    inSpinSubset: inTwoRowRefined && spinParity === nParity,
     xiDefined,
   };
 }
@@ -1185,7 +1205,7 @@ function omegaBuildInfo(lambdaPart, L, lowerLeftRows) {
 
 export function vartheta(T) {
   const size = tableauSize(T);
-  if (size % 2 !== 0) throw new Error("The input tableau must have even size.");
+  if (size % 2 !== 0) throw new Error("The tableau must have even size.");
   const n = size / 2;
   return {
     n,
@@ -1197,21 +1217,22 @@ export function vartheta(T) {
 export function computeXiTrace(T) {
   const validation = validateSYT(T);
   if (validation.size % 2 !== 0) {
-    throw new Error("The input SYT must have even size 2n.");
+    throw new Error("The tableau T must have even size 2n.");
   }
   const { n, U, S } = vartheta(T);
   const lam = straightShape(U);
   const steps = [
     {
-      phase: "Input",
-      title: "Input standard Young tableau",
-      description: "Input standard Young tableau T.",
+      phase: "vartheta",
+      title: "T ∈ SYT^=(2n)",
+      description: "The tableau T satisfies T_[n]=T^[n+1,2n].",
       tableaux: [{ label: "T", tableau: T }],
     },
     {
-      phase: "Input",
-      title: "Split T into U and S",
-      description: "Let U=T_[n] and S=st(T_[n+1,2n]). The map xi is defined when S rectifies to U.",
+      phase: "vartheta",
+      title: "vartheta(T)=(U,S)",
+      description: "Let U=T_[n] and S=st(T_[n+1,2n]). Since T_[n]=T^[n+1,2n], we have S in SYT^U(mu/lambda).",
+      split: { T, U, S, n },
       tableaux: [
         { label: "U", tableau: U },
         { label: "S", tableau: S },
@@ -1222,38 +1243,54 @@ export function computeXiTrace(T) {
   const psi = psiU(U, S, true);
   steps.push({
     phase: "Psi_U",
-    title: "First tableau switching",
-    description: "Let X(Q_lambda,S)=(A,B). Since S is in SYT^U(mu/lambda), we have A=rect(S)=U.",
+    title: "X(Q_lambda,S)",
+    description: "Let X(Q_lambda,S)=(A,B). Use B in X(1_lambda,B).",
     switching: {
       innerLabel: "Q_lambda",
       outerLabel: "S",
       finalInnerLabel: "B",
-      finalOuterLabel: "U",
+      finalOuterLabel: "A",
+      setup: {
+        leftLabel: "Q_lambda",
+        leftTableau: psi.Q,
+        rightLabel: "S",
+        rightTableau: S,
+        targetLabel: "B",
+        targetTableau: psi.B,
+      },
       states: psi.firstSwitch.rawStates,
     },
     tableaux: [
       { label: "Q_lambda", tableau: psi.Q },
       { label: "S", tableau: S },
-      { label: "U", tableau: psi.firstSwitch.first },
+      { label: "A", tableau: psi.firstSwitch.first },
       { label: "B", tableau: psi.B },
     ],
   });
   steps.push({
     phase: "Psi_U",
-    title: "Second tableau switching",
-    description: "Let X(1_lambda,B)=(C,D). Then C=Q_lambda and D=Psi_U(S).",
+    title: "X(1_lambda,B)",
+    description: "Let X(1_lambda,B)=(C,L). This gives L=Psi_U(S).",
     switching: {
       innerLabel: "1_lambda",
       outerLabel: "B",
-      finalInnerLabel: "L=Psi_U(S)",
-      finalOuterLabel: "Q_lambda",
+      finalInnerLabel: "L",
+      finalOuterLabel: "C",
+      setup: {
+        leftLabel: "1_lambda",
+        leftTableau: psi.one,
+        rightLabel: "B",
+        rightTableau: psi.B,
+        targetLabel: "L",
+        targetTableau: psi.L,
+      },
       states: psi.secondSwitch.rawStates,
     },
     tableaux: [
       { label: "1_lambda", tableau: psi.one },
       { label: "B", tableau: psi.B },
-      { label: "Q_lambda", tableau: psi.secondSwitch.first },
-      { label: "L=Psi_U(S)", tableau: psi.L },
+      { label: "C", tableau: psi.secondSwitch.first },
+      { label: "L", tableau: psi.L },
     ],
   });
 
@@ -1261,9 +1298,9 @@ export function computeXiTrace(T) {
   steps.push({
     phase: "Phi_0",
     title: "Final Yamanouchi domino tableau",
-    description: `The output D has outer shape lambda^square=(${lambdaSquare(lam).join(",")}), evaluation (${evaluation(phi.result).join(",")}), and spin ${spin(phi.result)}.`,
+    description: `D=(Phi_0 o Omega o Psi_U)(S) lies in YDT(lambda^square,mu), has outer shape lambda^square=(${lambdaSquare(lam).join(",")}), evaluation (${evaluation(phi.result).join(",")}), and spin(D)=${spin(phi.result)}.`,
     domino: phi.result,
-    finalInfo: finalSpinInfo(n, lam, validation.shape, phi.result, true),
+    finalInfo: finalSpinInfo(n, lam, validation.shape, phi.result, true, U),
   });
 
   return {
@@ -1286,8 +1323,8 @@ function appendOmegaPhiSteps(steps, lam, L) {
   const upperRightTableau = tableauFromRows(om.upperRight);
   steps.push({
     phase: "Omega",
-    title: "Omega",
-    description: "To form M, read each cell of L as follows: an entry k in row l of L contributes an entry l to row k of M. Then Omega(L) is obtained by placing M in the lower-left component and 1_lambda in the upper-right component.",
+    title: "Omega(L)",
+    description: "For each l,k, if L contains a_{l,k} entries equal to k in row l, then M contains a_{l,k} entries equal to l in row k. Then Omega(L) has lower-left component M and upper-right component 1_lambda.",
     tableaux: [
       { label: "L", tableau: L },
     ],
@@ -1304,8 +1341,8 @@ function appendOmegaPhiSteps(steps, lam, L) {
     if (step.kind === "d-map") {
       steps.push({
         phase: "Phi_0",
-        title: "d-map",
-        description: `Apply d to Omega(L): the lower-left component gives vertical dominoes, and the upper-right component gives horizontal dominoes, with inner shape delta_${step.tableau.innerK}.`,
+        title: "d(Omega(L))",
+        description: `Apply d to Omega(L): cells in the lower-left component give vertical dominoes, and cells in the upper-right component give horizontal dominoes. The inner shape is delta_${step.tableau.innerK}.`,
         domino: step.tableau,
         dMapView: {
           lambda: lam,
@@ -1316,8 +1353,8 @@ function appendOmegaPhiSteps(steps, lam, L) {
     } else {
       steps.push({
         phase: "Phi_0",
-        title: `theta step ${idx}`,
-        description: `Apply theta: draw arrows, decompose the dominoes into open and closed chains, move the open chains, and change the inner shape from delta_${step.before.innerK} to delta_${step.after.innerK}.`,
+        title: `theta: delta_${step.before.innerK} to delta_${step.after.innerK}`,
+        description: "Apply theta: draw arrows, decompose the dominoes into open and closed chains, and modify the dominoes in the open chains.",
         dominoBefore: step.before,
         dominoAfter: step.after,
         arrows: step.arrows,
@@ -1333,7 +1370,7 @@ function appendOmegaPhiSteps(steps, lam, L) {
 export function computeContinuedTrace(T) {
   const validation = validateSYT(T);
   if (validation.size % 2 !== 0) {
-    throw new Error("The input SYT must have even size 2n.");
+    throw new Error("The tableau T must have even size 2n.");
   }
   const { n, U, S } = vartheta(T);
   const inputLambda = straightShape(U);
@@ -1341,18 +1378,19 @@ export function computeContinuedTrace(T) {
   const rectified = first.first;
   const rectifiedLambda = straightShape(rectified);
 
-  const warning = "Warning: T is not in SYT^=(2n). The displayed continuation replaces U by rect(S), so the final domino tableau is not xi(T).";
+  const warning = "T is not in SYT^=(2n), so xi(T) is not defined. For comparison, the construction continues with rect(S) in place of U.";
   const steps = [
     {
-      phase: "Input",
-      title: "Input standard Young tableau",
-      description: "Input standard Young tableau T.",
+      phase: "vartheta",
+      title: "T ∉ SYT^=(2n)",
+      description: "The tableau T does not satisfy T_[n]=T^[n+1,2n], so xi(T) is not defined. For comparison, use rect(S) in place of U.",
       tableaux: [{ label: "T", tableau: T }],
     },
     {
-      phase: "Input",
-      title: "Split T into U and S",
+      phase: "vartheta",
+      title: "vartheta(T)=(U,S)",
       description: warning,
+      split: { T, U, S, n, rectified },
       tableaux: [
         { label: "U = T_[n]", tableau: U },
         { label: "S = st(T_[n+1,2n])", tableau: S },
@@ -1361,13 +1399,21 @@ export function computeContinuedTrace(T) {
     },
     {
       phase: "Psi_U",
-      title: "First tableau switching",
-      description: "Let X(Q_lambda,S)=(A,B). Here A=rect(S) is not U; equivalently, T is not in SYT^=(2n).",
+      title: "X(Q_lambda,S)",
+      description: "Let X(Q_lambda,S)=(A,B). Here A=rect(S) is not U, so xi(T) is not defined.",
       switching: {
         innerLabel: "Q_lambda",
         outerLabel: "S",
         finalInnerLabel: "B",
         finalOuterLabel: "A=rect(S)",
+        setup: {
+          leftLabel: "Q_lambda",
+          leftTableau: qTableau(inputLambda),
+          rightLabel: "S",
+          rightTableau: S,
+          targetLabel: "B",
+          targetTableau: first.second,
+        },
         states: first.rawStates,
       },
     },
@@ -1377,13 +1423,21 @@ export function computeContinuedTrace(T) {
   const L = second.second;
   steps.push({
     phase: "Psi_U",
-    title: "Second tableau switching",
-    description: "Let X(1_lambda,B)=(C,D), with lambda=sh(rect(S)). Continue with D.",
+    title: "X(1_lambda,B)",
+    description: "Let X(1_lambda,B)=(C,L), with lambda=sh(rect(S)). Use L in Omega.",
     switching: {
       innerLabel: "1_lambda",
       outerLabel: "B",
-      finalInnerLabel: "D",
+      finalInnerLabel: "L",
       finalOuterLabel: "C",
+      setup: {
+        leftLabel: "1_lambda",
+        leftTableau: oneTableau(rectifiedLambda),
+        rightLabel: "B",
+        rightTableau: first.second,
+        targetLabel: "L",
+        targetTableau: L,
+      },
       states: second.rawStates,
     },
   });
@@ -1392,9 +1446,9 @@ export function computeContinuedTrace(T) {
   steps.push({
     phase: "Phi_0",
     title: "Final Yamanouchi domino tableau",
-    description: `Here lambda=sh(rect(S))=(${rectifiedLambda.join(",")}). The displayed output has outer shape (${dominoOuterPartition(phi.result).join(",")}), evaluation (${evaluation(phi.result).join(",")}), and spin ${spin(phi.result)}.`,
+    description: `Here lambda=sh(rect(S))=(${rectifiedLambda.join(",")}). The final domino tableau has outer shape (${dominoOuterPartition(phi.result).join(",")}), evaluation (${evaluation(phi.result).join(",")}), and spin(D)=${spin(phi.result)}.`,
     domino: phi.result,
-    finalInfo: finalSpinInfo(n, rectifiedLambda, validation.shape, phi.result, false),
+    finalInfo: finalSpinInfo(n, rectifiedLambda, validation.shape, phi.result, false, rectified),
   });
 
   return {
@@ -1419,7 +1473,7 @@ export function xiReadiness(T) {
     return {
       ok: false,
       kind: "odd-size",
-      message: `This is a valid SYT of size ${validation.size}, but xi is defined for even size 2n.`,
+      message: `This is a valid SYT of size ${validation.size}, but xi is defined for tableaux of even size 2n.`,
       size: validation.size,
       shape: validation.shape,
     };

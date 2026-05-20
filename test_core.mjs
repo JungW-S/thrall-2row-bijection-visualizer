@@ -58,7 +58,7 @@ const expected = [
 assertEqual(dominoData(trace.result), expected, "final domino data");
 assertEqual(trace.steps[2].switching.states.length > 1, true, "first switching trace");
 
-const thetaSteps = trace.steps.filter((step) => step.title.startsWith("theta step"));
+const thetaSteps = trace.steps.filter((step) => step.dominoBefore && step.dominoAfter);
 assertEqual(thetaSteps.length, 4, "theta step count");
 thetaSteps.forEach((step, idx) => {
   assertEqual(Array.isArray(step.chainDetails), true, `theta ${idx + 1} chain details`);
@@ -91,7 +91,7 @@ const constructedRandomT = randomEqualSYT(maxExactRandomEqualN + 1, () => 0.37);
 assertEqual(xiReadiness(constructedRandomT).ok, true, "constructed random tableau should be xi-ready");
 assertThrows(
   () => randomEqualSYT(maxRandomEqualN + 1),
-  /currently enabled/,
+  /available/,
   "random generator should reject large n",
 );
 

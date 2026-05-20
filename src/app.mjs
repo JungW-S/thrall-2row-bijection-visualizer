@@ -10,15 +10,19 @@ import {
   spin,
   tableauToInputText,
   xiReadiness,
-} from "./core.mjs?v=20260517-random-n100";
-import { renderStep, renderStepList } from "./render.mjs?v=20260517-random-n100";
+} from "./core.mjs?v=20260520-story-polish-44";
+import { renderStep, renderStepList } from "./render.mjs?v=20260520-story-polish-44";
+import { renderStory } from "./story.mjs?v=20260520-story-polish-44";
 
 const input = document.querySelector("#tableau-input");
 const runButton = document.querySelector("#run-button");
-const exampleButton = document.querySelector("#example-button");
 const randomNInput = document.querySelector("#random-n");
 const randomButton = document.querySelector("#random-button");
 const errorBox = document.querySelector("#error-box");
+const storyModeButton = document.querySelector("#story-mode-button");
+const detailModeButton = document.querySelector("#detail-mode-button");
+const storyView = document.querySelector("#story-view");
+const detailView = document.querySelector("#detail-view");
 const metaBox = document.querySelector("#meta-box");
 const stepContainer = document.querySelector("#step-container");
 const stepList = document.querySelector("#step-list");
@@ -28,6 +32,16 @@ const counter = document.querySelector("#step-counter");
 
 let currentTrace = null;
 let currentIndex = 0;
+let currentMode = "story";
+
+function setMode(mode) {
+  currentMode = mode;
+  const storyActive = mode === "story";
+  storyView.hidden = !storyActive;
+  detailView.hidden = storyActive;
+  storyModeButton.classList.toggle("active", storyActive);
+  detailModeButton.classList.toggle("active", !storyActive);
+}
 
 function setError(message) {
   errorBox.textContent = message;
@@ -45,12 +59,12 @@ function updateMeta(trace) {
   const outShape = dominoOuterPartition(trace.result).join(",");
   const evalText = evaluation(trace.result).join(",");
   metaBox.innerHTML = `
-    <span><strong>case</strong> = ${trace.mode === "continued" ? "T not in SYT<sup>=</sup>(2n)" : "T in SYT<sup>=</sup>(2n)"}</span>
+    <span><strong>T</strong> ${trace.mode === "continued" ? "∉" : "∈"} SYT<sup>=</sup>(2n)</span>
     <span><strong>n</strong> = ${trace.n}</span>
     <span><strong>λ</strong> = (${trace.lambda.join(",")})</span>
-    <span><strong>output shape</strong> = (${outShape})</span>
+    <span><strong>sh(D)</strong> = (${outShape})</span>
     <span><strong>evaluation</strong> = (${evalText})</span>
-    <span><strong>spin</strong> = ${spin(trace.result)}</span>
+    <span><strong>spin(D)</strong> = ${spin(trace.result)}</span>
   `;
 }
 
@@ -84,6 +98,7 @@ function run() {
         prevButton.disabled = true;
         nextButton.disabled = true;
         counter.textContent = "0 / 0";
+        renderStory(null, storyView);
         metaBox.innerHTML = `
           <span><strong>size</strong> = ${readiness.size}</span>
           <span><strong>shape</strong> = (${readiness.shape.join(",")})</span>
@@ -94,18 +109,21 @@ function run() {
       }
       currentTrace = computeContinuedTrace(tableau);
       updateMeta(currentTrace);
+      renderStory(currentTrace, storyView);
       setWarning(currentTrace.warning);
       showStep(initialStepIndex(currentTrace));
       return;
     }
     currentTrace = computeXiTrace(tableau);
     updateMeta(currentTrace);
+    renderStory(currentTrace, storyView);
     showStep(initialStepIndex(currentTrace));
   } catch (err) {
     currentTrace = null;
     metaBox.replaceChildren();
     stepContainer.replaceChildren();
     stepList.replaceChildren();
+    renderStory(null, storyView);
     counter.textContent = "0 / 0";
     setError(err.message);
   }
@@ -116,7 +134,7 @@ async function loadRandomTableau() {
   try {
     setError("");
     randomButton.disabled = true;
-    randomButton.textContent = "Generating...";
+    randomButton.textContent = "Choosing...";
     await new Promise((resolve) => setTimeout(resolve, 0));
     const previous = input.value.trim();
     let nextText = "";
@@ -135,14 +153,13 @@ async function loadRandomTableau() {
 }
 
 runButton.addEventListener("click", run);
-exampleButton.addEventListener("click", () => {
-  input.value = defaultExample;
-  run();
-});
 randomNInput.max = String(maxRandomEqualN);
 randomButton.addEventListener("click", loadRandomTableau);
 prevButton.addEventListener("click", () => showStep(currentIndex - 1));
 nextButton.addEventListener("click", () => showStep(currentIndex + 1));
+storyModeButton.addEventListener("click", () => setMode("story"));
+detailModeButton.addEventListener("click", () => setMode("detail"));
 
 input.value = defaultExample;
+setMode("story");
 run();
