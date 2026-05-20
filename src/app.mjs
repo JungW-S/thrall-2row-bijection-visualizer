@@ -34,6 +34,9 @@ let currentTrace = null;
 let currentIndex = 0;
 let currentMode = "story";
 
+storyView.tabIndex = -1;
+detailView.tabIndex = -1;
+
 function setMode(mode) {
   currentMode = mode;
   const storyActive = mode === "story";
@@ -76,6 +79,35 @@ function showStep(index) {
   prevButton.disabled = currentIndex === 0;
   nextButton.disabled = currentIndex === currentTrace.steps.length - 1;
   counter.textContent = `${currentIndex + 1} / ${currentTrace.steps.length}`;
+}
+
+function isTextEntryTarget(target) {
+  if (!(target instanceof Element)) return false;
+  if (target.closest("textarea, input, select")) return true;
+  return Boolean(target.closest("[contenteditable='true']"));
+}
+
+function handleKeyboardNavigation(event) {
+  if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+  if (isTextEntryTarget(event.target)) return;
+  const previousKeys = new Set(["ArrowLeft", "ArrowUp", "PageUp"]);
+  const nextKeys = new Set(["ArrowRight", "ArrowDown", "PageDown"]);
+  const isPrevious = previousKeys.has(event.key);
+  const isNext = nextKeys.has(event.key);
+  const isBoundary = event.key === "Home" || event.key === "End";
+  if (!isPrevious && !isNext && !isBoundary) return;
+  if (!currentTrace) return;
+  event.preventDefault();
+  if (currentMode === "story") {
+    if (typeof storyView._storyGo !== "function") return;
+    if (event.key === "Home") storyView._storyGo("start");
+    else if (event.key === "End") storyView._storyGo("end");
+    else storyView._storyGo(isNext ? 1 : -1);
+    return;
+  }
+  if (event.key === "Home") showStep(0);
+  else if (event.key === "End") showStep(currentTrace.steps.length - 1);
+  else showStep(currentIndex + (isNext ? 1 : -1));
 }
 
 function initialStepIndex(trace) {
@@ -159,6 +191,7 @@ prevButton.addEventListener("click", () => showStep(currentIndex - 1));
 nextButton.addEventListener("click", () => showStep(currentIndex + 1));
 storyModeButton.addEventListener("click", () => setMode("story"));
 detailModeButton.addEventListener("click", () => setMode("detail"));
+document.addEventListener("keydown", handleKeyboardNavigation, { capture: true });
 
 input.value = defaultExample;
 setMode("story");

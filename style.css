@@ -1980,27 +1980,40 @@ code {
     grid-template-columns: 1fr;
   }
 
-  .story-jump-nav {
-    display: none;
+  .mode-bar {
+    display: block;
+    justify-content: stretch;
+  }
+
+  .mode-tabs {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    width: min(100%, calc(100vw - 20px));
+    min-width: 0;
+  }
+
+  .mode-button {
+    flex: 1;
+    min-width: 0;
   }
 
   .story-sticky {
-    position: relative;
-    top: auto;
+    top: 8px;
+    z-index: 4;
+    padding: 14px;
   }
 
   .story-scroll {
-    padding: 14px 0 0;
+    padding: 8px 0 38vh;
   }
 
   .story-guide {
-    position: relative;
-    top: auto;
+    display: none;
   }
 
   .story-scroll-marker {
-    height: calc(18vh * var(--story-marker-weight, 1));
-    min-height: calc(120px * var(--story-marker-weight, 1));
+    height: calc(36vh * var(--story-marker-weight, 1));
+    min-height: calc(220px * var(--story-marker-weight, 1));
   }
 
   .sidebar {
@@ -2029,23 +2042,163 @@ code {
 
 @media (max-width: 560px) {
   .layout {
-    width: calc(100vw - 20px);
-    padding: 22px 0 36px;
+    width: 100%;
+    padding: 16px 10px 32px;
   }
 
   .header {
-    gap: 14px;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .eyebrow {
+    font-size: 0.74rem;
+  }
+
+  h1 {
+    font-size: 2.05rem;
+  }
+
+  .header-note {
+    font-size: 0.9rem;
+  }
+
+  .header-side {
+    display: none;
+  }
+
+  textarea {
+    min-height: 82px;
   }
 
   .input-panel,
   .sidebar,
   .step-container,
   .story-sticky {
-    padding: 14px;
+    padding: 12px;
+  }
+
+  .input-panel {
+    margin-bottom: 12px;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+
+  .random-row {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  .random-row button {
+    width: 100%;
+  }
+
+  .random-note,
+  .hint {
+    font-size: 0.86rem;
+    overflow-wrap: anywhere;
+  }
+
+  .random-note {
+    display: none;
+  }
+
+  .mode-bar {
+    margin-bottom: 10px;
+  }
+
+  .mode-tabs {
+    grid-template-columns: 1fr;
+    width: 100%;
+    border-radius: 7px;
+  }
+
+  .mode-button {
+    padding: 8px 8px;
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.86rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #detail-mode-button {
+    font-size: 0;
+  }
+
+  #detail-mode-button::after {
+    content: "Step";
+    font-size: 0.86rem;
+  }
+
+  .story-jump-nav {
+    top: auto;
+    right: 12px;
+    bottom: 14px;
+    transform: none;
+  }
+
+  .story-jump-button {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.96);
+  }
+
+  .map-progress {
+    gap: 5px;
+    margin-bottom: 10px;
+    font-size: 0.76rem;
+  }
+
+  .map-progress-token {
+    min-height: 24px;
+    padding: 2px 6px;
+  }
+
+  .map-progress-map {
+    min-width: 30px;
+    min-height: 26px;
+    padding: 0 3px 1px;
+  }
+
+  .map-progress-arrow {
+    font-size: 0.95rem;
+  }
+
+  .story-title {
+    margin-bottom: 5px;
+    font-size: 1.18rem;
+  }
+
+  .story-subtitle {
+    margin-bottom: 9px;
+    font-size: 0.88rem;
+    line-height: 1.34;
+  }
+
+  .story-rule {
+    margin: -1px 0 9px;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+  }
+
+  .story-fact-tray {
+    justify-content: stretch;
+    margin-top: 8px;
+  }
+
+  .story-fact-line {
+    justify-self: stretch;
+    max-width: 100%;
+    font-size: 0.84rem;
+    text-align: right;
   }
 
   .story-stage {
-    height: 500px;
+    min-height: 340px;
+    border-radius: 7px;
   }
 
   .step-nav {

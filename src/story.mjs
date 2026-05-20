@@ -1347,9 +1347,14 @@ function updateMapProgress(progressNode, activeAnchor) {
 }
 
 function progressForAnchor(scenes, anchor) {
+  const index = Math.max(0, scenes.findIndex((scene) => scene.anchor === anchor));
+  return progressForSceneIndex(scenes, index);
+}
+
+function progressForSceneIndex(scenes, sceneIndex) {
   const weights = scenes.map(sceneWeight);
   const total = weights.reduce((sum, weight) => sum + weight, 0);
-  const index = Math.max(0, scenes.findIndex((scene) => scene.anchor === anchor));
+  const index = Math.max(0, Math.min(sceneIndex, scenes.length - 1));
   const before = weights.slice(0, index).reduce((sum, weight) => sum + weight, 0);
   return total === 0 ? 0 : before / total;
 }
@@ -1509,6 +1514,7 @@ export function renderStory(trace, container) {
   });
 
   let lastRegionIndex = -1;
+  let keyboardSceneIndex = 0;
   let framePending = false;
   let transitionsEnabled = false;
 
@@ -1529,17 +1535,38 @@ export function renderStory(trace, container) {
     });
   });
 
+  container._storyGo = (direction) => {
+    let targetIndex = keyboardSceneIndex;
+    if (direction === "start") {
+      targetIndex = 0;
+    } else if (direction === "end") {
+      targetIndex = scenes.length - 1;
+    } else if (direction > 0) {
+      targetIndex = Math.min(keyboardSceneIndex + 1, scenes.length - 1);
+    } else if (direction < 0) {
+      targetIndex = Math.max(keyboardSceneIndex - 1, 0);
+    }
+    keyboardSceneIndex = targetIndex;
+    scrollStoryToProgress(root, progressForSceneIndex(scenes, targetIndex));
+    scheduleUpdate();
+  };
+
   const fitStage = (cameraBounds) => {
     const rawWidth = cameraBounds.maxX - cameraBounds.minX + STORY_FIT_PADDING * 2;
     const rawHeight = cameraBounds.maxY - cameraBounds.minY + STORY_FIT_PADDING * 2;
     const offsetX = STORY_FIT_PADDING - cameraBounds.minX;
     const offsetY = STORY_FIT_PADDING - cameraBounds.minY;
     const availableWidth = Math.max(280, stage.clientWidth - 2);
-    const targetHeight = Math.min(720, Math.max(460, window.innerHeight - 210)) - 24;
+    const isCompact = window.innerWidth <= 640;
+    const minTargetHeight = isCompact ? 330 : 460;
+    const maxTargetHeight = isCompact ? 520 : 720;
+    const heightOffset = isCompact ? 250 : 210;
+    const stageMinHeight = isCompact ? 340 : 440;
+    const targetHeight = Math.min(maxTargetHeight, Math.max(minTargetHeight, window.innerHeight - heightOffset)) - 20;
     const scale = Math.min(1, availableWidth / rawWidth, targetHeight / rawHeight);
     const scaledWidth = rawWidth * scale;
     const scaledHeight = rawHeight * scale;
-    const stageHeight = Math.max(440, Math.ceil(scaledHeight + 24));
+    const stageHeight = Math.max(stageMinHeight, Math.ceil(scaledHeight + 20));
     canvas.style.width = `${rawWidth}px`;
     canvas.style.height = `${rawHeight}px`;
     canvasContent.style.width = `${rawWidth}px`;
@@ -1572,6 +1599,7 @@ export function renderStory(trace, container) {
     setMathHtml(rule, activeScene.rule ?? "");
     rule.hidden = !activeScene.rule;
     const activeIndex = scenes.indexOf(activeScene);
+    keyboardSceneIndex = activeIndex;
     updateMapProgress(mapProgress, activeAnchorForIndex(scenes, activeIndex));
     if (lastRegionIndex !== activeIndex) {
       lastRegionIndex = activeIndex;
@@ -1628,6 +1656,7 @@ export function renderStory(trace, container) {
   container._storyCleanup = () => {
     window.removeEventListener("scroll", scheduleUpdate);
     window.removeEventListener("resize", scheduleUpdate);
+    container._storyGo = null;
   };
   update();
 }
